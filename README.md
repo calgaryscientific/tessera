@@ -57,5 +57,5 @@ Calgary Scientific Inc
 
 ## License
 
-See the LICENSE file for more info.
+Apache 2.0 (See LICENSE file)
 
