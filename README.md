@@ -8,6 +8,10 @@ Tessera is an Angular module that provides three-way data-binding between Angula
 ```bower install tessera```
 
 # Usage
+Include the library:
+```
+<script src="/myApp/bower_components/tessera/tessera.js"></script>
+```
 
 Add the module to your main application:
 ```
@@ -35,7 +39,7 @@ You can also unbind any bound property:
 $tessera.unbind('SharedMessage', '/SharedMessage'); 
 ```
 
-Finally, you can pass a traditional callback through for any PureWeb AppState changes:
+Finally, you can pass a traditional callback through for any PureWeb AppState changes, this will be called after the Angular digest loop:
 ```
 var f = function(evt){var n = evt.getNewValue(); console.log(n);};
 $tessera.bind($scope, 'ScribbleColor', '/ScribbleColor', f); 
