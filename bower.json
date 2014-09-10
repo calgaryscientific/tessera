@@ -1,0 +1,25 @@
+{
+  "name": "tessera",
+  "version": "0.0.1",
+  "main": "./tessera.js",
+  "keywords": [
+    "calgary",
+    "scientific",
+    "pureweb",
+    "angular",
+    "data-binding"
+  ],
+  "authors": [
+    "Calgary Scientific Inc. (http://www.calgaryscientific.com)"
+  ],
+  "description": "Angular module providing three-way data-binding between Angular (DOM/Model) and PureWeb (AppState)",
+  "dependencies": {
+    "angular": "1.2.x || 1.3.x",
+    "pureweb": "4.1.x"    
+  },
+  "moduleType": [
+    "imports"
+  ],
+  "license": "See LICENSE FILE",
+  "homepage": "http://www.calgaryscientific.com/pureweb"
+}
