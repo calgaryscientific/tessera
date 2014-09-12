@@ -4,13 +4,17 @@ angular.module('tessera', [])
     .service('$tessera', function() {
     	var paths = {};
 		this.bind = function(scope, prop, path, handler){			
+			if ((!scope) || (!prop) || (!path)){
+				console.error('scope, prop, and path must all be defined on $tessera.bind()');
+				return;
+			}
 			var bound = {
 				handler: handler,
 				property: prop,
 				boundHandler: null,
 				unlisten: null
-			};
-
+			};		
+			
 			var appStateHandler = function(evt){
 				var newVal = evt.getNewValue();
 				if (scope[prop] !== newVal){
@@ -35,7 +39,49 @@ angular.module('tessera', [])
 			return bound;
 		};
 
+		this.bindObj = function(scope, prop, path, handler){			
+			if ((!scope) || (!prop) || (!path)){
+				console.error('scope, prop, and path must all be defined on $tessera.bind()');
+				return;
+			}
+			var bound = {
+				handler: handler,
+				property: prop,
+				boundHandler: null,
+				unlisten: null
+			};		
+			
+			var appStateHandler = function(evt){
+				var newVal = pureweb.getFramework().getState().getStateManager().getTree(path);
+				if (path.indexOf('/') === 0){
+					path = path.substring(1,path.length);
+				}
+				var setVal = newVal[path];
+				scope[prop] = setVal;
+				scope.$apply();
+
+				if ((handler !== null) && (typeof handler !== 'undefined')){
+					handler(evt);					
+				}
+			}
+			bound.boundHandler = appStateHandler;
+			pureweb.getFramework().getState().getStateManager().addChildChangedHandler(path, appStateHandler);
+			
+			bound.unlisten = scope.$watch(prop, function(newVal, oldVal){
+				var obj = {};
+				obj[prop] = newVal;
+				pureweb.getFramework().getState().getStateManager().setTree(path, obj);
+			}, true);
+			
+			paths[path] = bound;
+			return bound;
+		};
+
 		this.unbind = function(prop, path, handler){
+			if ((!prop) || (!path)){
+				console.error('prop, and path must all be defined on $tessera.bind()');
+				return;
+			}
 			var bound = paths[path];
 			if ((bound !== null) && (typeof bound !== 'undefined')){
 				if (typeof bound.unlisten === 'function'){
@@ -52,6 +98,6 @@ angular.module('tessera', [])
 			else if ((bound.handler !== null) && (typeof bound.handler !== 'undefined')){
 				return bound.handler;
 			}
-		};
+		};	
 	}	   
 );
