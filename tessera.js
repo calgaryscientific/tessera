@@ -3,11 +3,24 @@
 angular.module('tessera', [])
     .service('$tessera', function() {
     	var paths = {};
-		this.bind = function(scope, prop, path, handler){			
+    	
+    	this.bind = function(scope, prop, path, handler){
 			if ((!scope) || (!prop) || (!path)){
 				console.error('scope, prop, and path must all be defined on $tessera.bind()');
 				return;
 			}
+			if (typeof scope[prop] === 'object'){
+				this.bindObj_(scope, prop, path, handler);				
+			}else if ((typeof scope[prop] === 'string') ||
+					(typeof scope[prop] === 'number') ||
+					(typeof scope[prop] === 'boolean')){
+				this.bindVal_(scope, prop, path, handler);				
+			}else{
+				console.warn('I do not know how to bind ' + prop + ' because it is a: ', typeof scope[prop]);
+			}
+    	};
+
+		this.bindVal_ = function(scope, prop, path, handler){			
 			var bound = {
 				handler: handler,
 				property: prop,
@@ -39,11 +52,7 @@ angular.module('tessera', [])
 			return bound;
 		};
 
-		this.bindObj = function(scope, prop, path, handler){			
-			if ((!scope) || (!prop) || (!path)){
-				console.error('scope, prop, and path must all be defined on $tessera.bind()');
-				return;
-			}
+		this.bindObj_ = function(scope, prop, path, handler){				
 			var bound = {
 				handler: handler,
 				property: prop,
@@ -77,8 +86,8 @@ angular.module('tessera', [])
 			return bound;
 		};
 
-		this.unbind = function(prop, path, handler){
-			if ((!prop) || (!path)){
+		this.unbind = function(scope, prop, path, handler){
+			if ((!scope) || (!prop) || (!path)){
 				console.error('prop, and path must all be defined on $tessera.bind()');
 				return;
 			}
@@ -92,7 +101,11 @@ angular.module('tessera', [])
 			//If you passed in an AppState handler, and it's one that's registered
 			if ((handler !== null) && (typeof handler !== 'undefined') && (handler === bound.handler)){
 				//Unregister it
-				pureweb.getFramework().getState().getStateManager().removeValueChangedHandler(path, bound.boundHandler);				
+				if (typeof scope[prop] === 'object'){
+					pureweb.getFramework().getState().getStateManager().removeChildChangedHandler(path, bound.boundHandler);				
+				}else{
+					pureweb.getFramework().getState().getStateManager().removeValueChangedHandler(path, bound.boundHandler);				
+				}
 			} 
 			//Else, if there is a handler registered for the thing you just unbound, pass it back.
 			else if ((bound.handler !== null) && (typeof bound.handler !== 'undefined')){
