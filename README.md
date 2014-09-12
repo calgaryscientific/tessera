@@ -46,6 +46,8 @@ $tessera.bind($scope, 'ScribbleColor', '/ScribbleColor', f);
 ```
 
 If you want to unbind a property with a callback you must pass the callback into the unbind method to unregister the AppState callback.  If you unbind a property without passing the callback, the callback will be returned by unbind() and you can unregister the callback using traditional PureWeb methods (removeValueChangedHandler()).
+
+Finally, all bound values will be recast as strings upon their first synch.
   
 # PureWeb
 

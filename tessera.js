@@ -1,3 +1,8 @@
+/*
+ Tessera - A 3-way data-binding module for AngularJS and PureWeb
+ Copyright (c) 2014 Calgary Scientific Inc., http://www.calgaryscientific.com/pureweb
+ License: Apache 2.0 (see LICENSE)
+*/
 'use strict';
 
 angular.module('tessera', [])
