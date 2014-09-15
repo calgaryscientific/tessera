@@ -26,6 +26,7 @@ angular.module('tessera', [])
     	};
 
 		this.bindVal_ = function(scope, prop, path, handler){			
+			var self = this;
 			var bound = {
 				handler: handler,
 				property: prop,
@@ -46,18 +47,21 @@ angular.module('tessera', [])
 			bound.boundHandler = appStateHandler;
 			pureweb.getFramework().getState().getStateManager().addValueChangedHandler(path, appStateHandler);
 			
-			bound.unlisten = scope.$watch(prop, function(newVal, oldVal){
+			var CB = function(newVal, oldVal){
 				if (newVal === oldVal){
 					return;
 				}
 				pureweb.getFramework().getState().setValue(path, newVal);
-			});
+			};
+			var bouncyCB = self.debounce_(CB, 100);				
+			bound.unlisten = scope.$watch(prop, bouncyCB);
 			
 			paths[path] = bound;
 			return bound;
 		};
 
-		this.bindObj_ = function(scope, prop, path, handler){				
+		this.bindObj_ = function(scope, prop, path, handler){
+			var self = this;		
 			var bound = {
 				handler: handler,
 				property: prop,
@@ -81,14 +85,56 @@ angular.module('tessera', [])
 			bound.boundHandler = appStateHandler;
 			pureweb.getFramework().getState().getStateManager().addChildChangedHandler(path, appStateHandler);
 			
-			bound.unlisten = scope.$watch(prop, function(newVal, oldVal){
+
+			var CB = function(newVal, oldVal){
 				var obj = {};
 				obj[prop] = newVal;
 				pureweb.getFramework().getState().getStateManager().setTree(path, obj);
-			}, true);
-			
+			};
+			var bouncyCB = self.debounce_(CB, 100);				
+			bound.unlisten = scope.$watch(prop, bouncyCB, true);
+		
 			paths[path] = bound;
 			return bound;
+		};
+
+		/*
+		* This implementation of debounce has been taken from 
+		* the underscore project: http://underscorejs.org/#debounce
+		* and lightly modified.
+		*/
+		this.debounce_ = function(func, wait, immediate) {
+			var now = Date.now || function() {
+  				return new Date().getTime();
+			};		    
+			var timeout, args, context, timestamp, result;
+
+		    var later = function() {
+		      var last = now() - timestamp;
+
+		      if (last < wait && last > 0) {
+		        timeout = setTimeout(later, wait - last);
+		      } else {
+		        timeout = null;
+		        if (!immediate) {
+		          result = func.apply(context, args);
+		          if (!timeout) context = args = null;
+		        }
+		      }
+		    };
+
+		    return function() {
+		      context = this;
+		      args = arguments;
+		      timestamp = now();
+		      var callNow = immediate && !timeout;
+		      if (!timeout) timeout = setTimeout(later, wait);
+		      if (callNow) {
+		        result = func.apply(context, args);
+		        context = args = null;
+		      }
+		      return result;
+		    };
 		};
 
 		this.unbind = function(scope, prop, path, handler){
