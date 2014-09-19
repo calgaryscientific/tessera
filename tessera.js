@@ -7,59 +7,75 @@
 
 angular.module('tessera', [])
     .service('$tessera', function() {
+    	//Paths stores all the things we've bound (used for unbinding)
     	var paths = {};
     	
+    	//User facing wrapper for binding
     	this.bind = function(scope, prop, path, handler){
 			if ((!scope) || (!prop) || (!path)){
 				console.error('scope, prop, and path must all be defined on $tessera.bind()');
 				return;
-			}
+			}			
 			if (typeof scope[prop] === 'object'){
 				this.bindObj_(scope, prop, path, handler);				
 			}else if ((typeof scope[prop] === 'string') ||
 					(typeof scope[prop] === 'number') ||
 					(typeof scope[prop] === 'boolean')){
 				this.bindVal_(scope, prop, path, handler);				
+			}else if (typeof scope[prop] === 'undefined'){
+				console.warn('I do not know how to bind ' + prop + ' because it is undefined. ' + prop + ' must be explicitly declared on $scope before it can be bound.');
 			}else{
-				console.warn('I do not know how to bind ' + prop + ' because it is a: ', typeof scope[prop]);
+				console.error('I do not know how to bind ' + prop + ' because it is a: ', typeof scope[prop]);
 			}
     	};
 
+    	//Internal method for binding values
 		this.bindVal_ = function(scope, prop, path, handler){			
 			var self = this;
+
+			//Stores info about what was bound
 			var bound = {
-				handler: handler,
-				property: prop,
-				boundHandler: null,
-				unlisten: null
+				handler: handler, //AppState handler use for removing appstate listeners(opt)
+				property: prop, //Name of the property we're binding
+				boundHandler: null, //The wrapped handler 
+				unlisten: null //The angular unwatch method for this binding
 			};		
 			
+			//This is the handler that is actually called when app state changes come in
 			var appStateHandler = function(evt){
 				var newVal = evt.getNewValue();
-				if (scope[prop] !== newVal){
+				//If the value from appstate is different than what angular has
+				if (scope[prop] !== newVal){					
 					scope[prop] = newVal;
 					scope.$apply();
 				}
+				//If there was a pass through call back for appstate, call it
 				if ((handler !== null) && (typeof handler !== 'undefined')){
 					handler(evt);					
 				}
 			}
 			bound.boundHandler = appStateHandler;
+			//Listen on the path
 			pureweb.getFramework().getState().getStateManager().addValueChangedHandler(path, appStateHandler);
 			
-			var CB = function(newVal, oldVal){
+			//This method is called when the value changes in Angular
+			var CB = function(newVal, oldVal){			
 				if (newVal === oldVal){
 					return;
 				}
+				//Set the value in app state 
 				pureweb.getFramework().getState().setValue(path, newVal);
 			};
-			var bouncyCB = self.debounce_(CB, 100);				
-			bound.unlisten = scope.$watch(prop, bouncyCB);
-			
+			//Debounce the set method so we don't cause event storms			
+			var debouncyCB = self.debounce_(CB, 100);			
+			bound.unlisten = scope.$watch(prop, debouncyCB);
+
+			//Add this bind object to the paths object for later reference
 			paths[path] = bound;
 			return bound;
 		};
 
+		//Same as bindVal_ but for JS objects
 		this.bindObj_ = function(scope, prop, path, handler){
 			var self = this;		
 			var bound = {
@@ -91,8 +107,8 @@ angular.module('tessera', [])
 				obj[prop] = newVal;
 				pureweb.getFramework().getState().getStateManager().setTree(path, obj);
 			};
-			var bouncyCB = self.debounce_(CB, 100);				
-			bound.unlisten = scope.$watch(prop, bouncyCB, true);
+			var debouncyCB = self.debounce_(CB, 100);				
+			bound.unlisten = scope.$watch(prop, debouncyCB, true);
 		
 			paths[path] = bound;
 			return bound;
@@ -137,11 +153,13 @@ angular.module('tessera', [])
 		    };
 		};
 
+		//Unbind a appstate from angular
 		this.unbind = function(scope, prop, path, handler){
 			if ((!scope) || (!prop) || (!path)){
 				console.error('prop, and path must all be defined on $tessera.bind()');
 				return;
 			}
+			//If we have an unlisten method provided by angular.watch(), then call it
 			var bound = paths[path];
 			if ((bound !== null) && (typeof bound !== 'undefined')){
 				if (typeof bound.unlisten === 'function'){
@@ -159,6 +177,7 @@ angular.module('tessera', [])
 				}
 			} 
 			//Else, if there is a handler registered for the thing you just unbound, pass it back.
+			//This will allow you to directly remove the appstate handler using pureweb methods
 			else if ((bound.handler !== null) && (typeof bound.handler !== 'undefined')){
 				return bound.handler;
 			}
