@@ -23,7 +23,9 @@ angular.module('tessera', [])
 					(typeof scope[prop] === 'boolean')){
 				this.bindVal_(scope, prop, path, handler);				
 			}else if (typeof scope[prop] === 'undefined'){
-				console.warn('I do not know how to bind ' + prop + ' because it is undefined. ' + prop + ' must be explicitly declared on $scope before it can be bound.');
+				scope[prop] = null;
+				console.warn(prop + ' is undefined on scope. It has been initialized to null');
+				this.bindVal_(scope, prop, path, handler);
 			}else{
 				console.error('I do not know how to bind ' + prop + ' because it is a: ', typeof scope[prop]);
 			}
