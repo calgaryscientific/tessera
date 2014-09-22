@@ -9,11 +9,36 @@ angular.module('tessera', [])
     .service('$tessera', function() {
     	//Paths stores all the things we've bound (used for unbinding)
     	var paths = {};
-    	
+
+    	//This will watch the scope.pureweb object for any changes 
+    	//and auto bind to new properties
+    	this.autoBind = function(scope, prop, on){
+    		if (!scope){
+    			console.error('scope must be defined for tessera.watch()');    			
+    		}
+    		if (!prop){
+    			prop = 'pureweb';
+    		}
+    		if (on){
+	    		if (!scope[prop]){
+	    			scope[prop] = {};
+	    		}
+	    		var autoBindCb = function(newVal, oldVal){
+	    			for (prop in newVal){
+	    				if (newVal.hasOwnProperty(prop){
+
+	    				}
+	    			}
+	    		}
+	    		$watch('pureweb', autoBindCb, true);
+
+    		}
+    	};
+
     	//User facing wrapper for binding
     	this.bind = function(scope, prop, path, handler){
 			if ((!scope) || (!prop) || (!path)){
-				console.error('scope, prop, and path must all be defined on $tessera.bind()');
+				console.error('scope, prop, and path must all be defined for tessera.bind()');
 				return;
 			}			
 			if (typeof scope[prop] === 'object'){
@@ -23,7 +48,7 @@ angular.module('tessera', [])
 					(typeof scope[prop] === 'boolean')){
 				this.bindVal_(scope, prop, path, handler);				
 			}else if (typeof scope[prop] === 'undefined'){
-				scope[prop] = null;
+				scope[prop] = null;				
 				console.warn(prop + ' is undefined on scope. It has been initialized to null');
 				this.bindVal_(scope, prop, path, handler);
 			}else{
