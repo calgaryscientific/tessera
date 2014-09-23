@@ -25,7 +25,7 @@ angular.module('tessera', [])
 	    		}
 	    		var autoBindCb = function(newVal, oldVal){
 	    			for (prop in newVal){
-	    				if (newVal.hasOwnProperty(prop){
+	    				if (newVal.hasOwnProperty(prop)){
 
 	    				}
 	    			}
