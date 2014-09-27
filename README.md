@@ -33,21 +33,22 @@ Specify the properties you want to bind to AppState:
 ```
 $tessera.bind($scope, 'SharedMessage', '/SharedMessage');
 ```  
+If an appstate path is not provided, then bind will simply use the property name as the app state path.
 
-You can also unbind any bound property:
+Bind supports binding to both basic data types and objects.  When binding to an object, any changes made to the children within that object (recursively), will be picked up and synchronized.  Additionally, all bound properties (and object values) will be recast as strings upon their first synch.
+
+If you need to unbind a previously bound property just use $tessera.unbind:
 ```
 $tessera.unbind('SharedMessage', '/SharedMessage'); 
 ```
 
-Finally, you can pass a traditional callback through for any PureWeb AppState changes, this will be called after the Angular digest loop:
+Additionally, you can pass a traditional callback through for any PureWeb AppState changes, this will be called after the Angular digest loop:
 ```
 var f = function(evt){var n = evt.getNewValue(); console.log(n);};
 $tessera.bind($scope, 'ScribbleColor', '/ScribbleColor', f); 
 ```
 
 If you want to unbind a property with a callback you must pass the callback into the unbind method to unregister the AppState callback.  If you unbind a property without passing the callback, the callback will be returned by unbind() and you can unregister the callback using traditional PureWeb methods (removeValueChangedHandler()).
-
-Finally, all bound values will be recast as strings upon their first synch.
   
 # PureWeb
 
