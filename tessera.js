@@ -10,29 +10,33 @@ angular.module('tessera', [])
     	//Paths stores all the things we've bound (used for unbinding)
     	var paths = {};
 
-    	//This will watch the scope.pureweb object for any changes 
+    	//This will watch the scope.<prop> or scope.pureweb object for any changes 
     	//and auto bind to new properties
-    	this.autoBind = function(scope, prop, on){
+    	this.autoBind = function(scope, prop){
+    		var self = this; 
+
     		if (!scope){
-    			console.error('scope must be defined for tessera.watch()');    			
+    			console.error('scope must be defined for tessera.autoBind()');    			
     		}
     		if (!prop){
     			prop = 'pureweb';
+    		}    		
+    		if (!scope[prop]){
+    			scope[prop] = {};
     		}
-    		if (on){
-	    		if (!scope[prop]){
-	    			scope[prop] = {};
-	    		}
-	    		var autoBindCb = function(newVal, oldVal){
-	    			for (prop in newVal){
-	    				if (newVal.hasOwnProperty(prop)){
 
-	    				}
-	    			}
-	    		}
-	    		$watch('pureweb', autoBindCb, true);
-
+    		var autoBindCb = function(newVal, oldVal){
+    			var oldKeys = self.keys_(oldVal).sort();
+    			var newKeys = self.keys_(newVal).sort();
+    			var added = self.difference_(oldKeys, newKeys);
+    			var removed = self.difference_(newKeys, oldKeys);
+    			console.log('Added: ', added);
+    			console.log('Removed: ', removed);
     		}
+    		console.log('Watching ' + prop);
+    		scope.$watch(prop, autoBindCb, true);
+
+    		
     	};
 
     	//User facing wrapper for binding
@@ -179,6 +183,22 @@ angular.module('tessera', [])
 		      return result;
 		    };
 		};
+
+		//Returns all the elements in array1 not in array2
+		this.difference_ = function(array1, array2){
+			return array2.filter(function(i) {return array1.indexOf(i) < 0;});
+		};
+
+		//Creates an array of immediate child keys for  this object
+		this.keys_ = function(obj) {    	   
+    		var keys = [];
+    		for (var key in obj){
+    			if (obj.hasOwnProperty(key)){
+    				keys.push(key);		
+    			} 
+    		} 
+    		return keys;
+  		};
 
 		//Unbind a appstate from angular
 		this.unbind = function(scope, prop, path, handler){
