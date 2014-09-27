@@ -8,43 +8,17 @@
 angular.module('tessera', [])
     .service('$tessera', function() {
     	//Paths stores all the things we've bound (used for unbinding)
-    	var paths = {};
-
-    	//This will watch the scope.<prop> or scope.pureweb object for any changes 
-    	//and auto bind to new properties
-    	this.autoBind = function(scope, prop){
-    		var self = this; 
-
-    		if (!scope){
-    			console.error('scope must be defined for tessera.autoBind()');    			
-    		}
-    		if (!prop){
-    			prop = 'pureweb';
-    		}    		
-    		if (!scope[prop]){
-    			scope[prop] = {};
-    		}
-
-    		var autoBindCb = function(newVal, oldVal){
-    			var oldKeys = self.keys_(oldVal).sort();
-    			var newKeys = self.keys_(newVal).sort();
-    			var added = self.difference_(oldKeys, newKeys);
-    			var removed = self.difference_(newKeys, oldKeys);
-    			console.log('Added: ', added);
-    			console.log('Removed: ', removed);
-    		}
-    		console.log('Watching ' + prop);
-    		scope.$watch(prop, autoBindCb, true);
-
-    		
-    	};
+    	var paths = {};    	
 
     	//User facing wrapper for binding
     	this.bind = function(scope, prop, path, handler){
-			if ((!scope) || (!prop) || (!path)){
-				console.error('scope, prop, and path must all be defined for tessera.bind()');
+			if ((!scope) || (!prop)){
+				console.error('scope, and prop must be defined for tessera.bind()');
 				return;
-			}			
+			}
+			if (!path){
+				path = prop;
+			}
 			if (typeof scope[prop] === 'object'){
 				this.bindObj_(scope, prop, path, handler);				
 			}else if ((typeof scope[prop] === 'string') ||
@@ -122,6 +96,9 @@ angular.module('tessera', [])
 					path = path.substring(1,path.length);
 				}
 				var setVal = newVal[path];
+				if (setVal === null){
+					setVal = {};
+				}
 				scope[prop] = setVal;
 				scope.$apply();
 
@@ -183,22 +160,6 @@ angular.module('tessera', [])
 		      return result;
 		    };
 		};
-
-		//Returns all the elements in array1 not in array2
-		this.difference_ = function(array1, array2){
-			return array2.filter(function(i) {return array1.indexOf(i) < 0;});
-		};
-
-		//Creates an array of immediate child keys for  this object
-		this.keys_ = function(obj) {    	   
-    		var keys = [];
-    		for (var key in obj){
-    			if (obj.hasOwnProperty(key)){
-    				keys.push(key);		
-    			} 
-    		} 
-    		return keys;
-  		};
 
 		//Unbind a appstate from angular
 		this.unbind = function(scope, prop, path, handler){
